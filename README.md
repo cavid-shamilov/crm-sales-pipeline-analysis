@@ -23,4 +23,31 @@ The project uses four related CSV files to analyze CRM sales pipeline performanc
 
 **Next step:** Review the data dictionary and assess missing values, duplicates, data types, and data validity across all four tables.
 
+---
+
+### Step 3: Missing Values Audit
+
+A missing-value audit was conducted across all four tables.
+
+| Table | Column | Missing values | Assessment |
+|---|---|---:|---|
+| `sales_pipeline` | `account` | 1,425 (16.19%) | Present only in Prospecting and Engaging stages; requires further investigation |
+| `sales_pipeline` | `engage_date` | 500 (5.68%) | Missing values occur only in Prospecting; potentially expected |
+| `sales_pipeline` | `close_date` | 2,089 (23.74%) | Missing values occur only in open opportunities |
+| `sales_pipeline` | `close_value` | 2,089 (23.74%) | Missing values occur only in open opportunities |
+| `accounts` | `subsidiary_of` | 70 (82.35%) | Potentially valid for companies without a parent company |
+| All other audited columns | — | 0 | No missing values detected |
+
+**Key findings**
+
+- Missing `close_date` and `close_value` values align with opportunities that have not yet reached a final outcome.
+- Missing `engage_date` values occur only in the Prospecting stage, which may be consistent with the sales process.
+- Missing account assignments require further investigation before deciding whether they affect analysis.
+- Missing `subsidiary_of` values may indicate that a company has no parent company; this interpretation has not yet been confirmed.
+- No missing values were found in the `products` table or any of the three columns in `sales_teams`.
+
+**Data handling decision:** No missing values were filled with arbitrary values or deleted during this audit. Each missing-value pattern will be assessed according to its business meaning before analysis.
+
+**Status:** Completed.
+
 
