@@ -50,4 +50,23 @@ A missing-value audit was conducted across all four tables.
 
 **Status:** Completed.
 
+---
+
+### Step 4: Duplicate Records Audit
+
+Duplicate checks were performed across the four tables to identify repeated key values and fully duplicated records.
+
+**Key findings**
+- No duplicate values were found in `sales_pipeline.opportunity_id`.
+- No duplicate account names were found in `accounts.account`.
+- No duplicate product names were found in `products.product`.
+- No duplicate sales agent names were found in `sales_teams.sales_agent`.
+- No fully duplicated rows were identified in the `sales_pipeline` or `accounts` tables.
+
+Repeated values in non-key columns, such as `deal_stage`, `product`, and `sales_agent` in the sales pipeline, are expected because multiple opportunities can share the same stage, product, or sales representative.
+
+**Conclusion:** No duplicate-record issues were identified in the checks performed. No records were removed during this audit.
+
+**Status:** Completed.
+
 
