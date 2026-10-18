@@ -69,4 +69,22 @@ Repeated values in non-key columns, such as `deal_stage`, `product`, and `sales_
 
 **Status:** Completed.
 
+---
+
+### Step 5: Data Types and Formats Audit
+
+The data types and display formats of key columns were reviewed in Excel.
+
+**Key findings**
+- Sales date values were recognized by Excel as valid dates. The dates were displayed in day-month-year (DMY) format.
+- `close_value`, `sales_price`, `revenue`, and `employees` were recognized as numeric values, as confirmed using Excel's `ISNUMBER()` function.
+- `year_established` values were preserved correctly as years and retained as text to avoid unintended date conversions.
+- Numeric values were displayed without currency symbols, with periods used as thousands separators. This was treated as a display-format choice rather than a data-quality issue because the tested values were recognized as numbers.
+
+**Conclusion:** No data-type issues were identified in the tested columns. No values were modified during this audit.
+
+**Status:** Completed.
+
+---
+
 
