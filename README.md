@@ -107,3 +107,23 @@ Business rules and value constraints were reviewed across the CRM dataset.
 
 **Status:** Completed.
 
+---
+
+### Step 7: Primary Keys and Relationships Audit
+
+The key relationships between the four tables were reviewed to assess referential integrity.
+
+**Key findings**
+- `sales_pipeline.opportunity_id` contains no duplicate values and can serve as the opportunity identifier.
+- All populated `sales_pipeline.account` values were matched to `accounts.account`.
+- A product-name inconsistency (`GTXPro` versus `GTX Pro`) was identified and corrected to match the canonical product name.
+- All `sales_pipeline.sales_agent` values were matched to `sales_teams.sales_agent`.
+- The `account`, `product`, and `sales_agent` fields in `sales_pipeline` can be used to link opportunities to the corresponding lookup tables.
+
+**Conclusion:** The tested relationships were validated after standardizing the product name. The original source data should be preserved, and the correction documented in the cleaning workflow.
+
+**Status:** Completed for the relationships tested.
+
+---
+
+
