@@ -87,4 +87,23 @@ The data types and display formats of key columns were reviewed in Excel.
 
 ---
 
+### Step 6: Data Validity Audit
+
+Business rules and value constraints were reviewed across the CRM dataset.
+
+**Key findings**
+- The `deal_stage` column contains only the expected categories: `Prospecting`, `Engaging`, `Won`, and `Lost`.
+- No negative values were identified in `close_value`.
+- All `sales_price` values were positive.
+- No zero or negative values were identified in `employees`.
+- `year_established` values were reviewed and considered plausible.
+- Won and Lost opportunities had populated `close_date` values, while Prospecting and Engaging opportunities had missing closing dates.
+- Won opportunities had positive `close_value` values, while Lost opportunities had `close_value = 0`.
+- The date-order check found no cases where `close_date` preceded `engage_date`.
+- Missing `close_value` values aligned with open opportunities.
+- No suspicious extreme values were reported in the reviewed `accounts.revenue` and `accounts.employees` columns.
+
+**Conclusion:** No major data validity issues were identified in the checks performed. Missing values and business-rule exceptions were assessed in context rather than automatically replaced or deleted.
+
+**Status:** Completed.
 
