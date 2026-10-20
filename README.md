@@ -164,3 +164,63 @@ The preliminary data quality audit identified a small number of items requiring 
 The tested identifiers, data types, date relationships, and business rules were generally consistent with the expected structure of the CRM sales dataset.
 
 The data is ready to proceed to the SQL Server import stage, with the identified cleaning decisions documented and the source files preserved for traceability.
+
+---
+
+Task 1. Calculate the number of opportunities in each deal_stage.
+
+```sql
+select deal_stage,
+count(opportunity_id) as [Opportunity Count]
+from sales_pipeline
+group by deal_stage
+order by [Opportunity Count] desc
+```
+
+Task 2. Calculate the total number of opportunities in the dataset.
+
+```sql
+select count(opportunity_id) as [Total Opportunity]
+from sales_pipeline
+```
+
+Task 3. Calculate the number and percentage of open opportunities (Prospecting, Engaging) versus closed opportunities (Won, Lost).
+```sql
+with CategorizedPipeline as (
+select
+opportunity_id,
+case 
+when deal_stage in ('Prospecting', 'Engaging') then 'Open Opportunities'
+when deal_stage in ('Won', 'Lost') then 'Closed Opportunities'
+end as opportunity_status
+from sales_pipeline
+)
+select 
+opportunity_status,
+count(opportunity_id) as opportunity_count,
+cast(100.0 * count(opportunity_id) / SUM(COUNT(opportunity_id)) over() as decimal(5,2)) as percentage
+from CategorizedPipeline
+group by opportunity_status
+```
+
+Task 4. Calculate the total number of won deals and lost deals.
+
+```sql
+select deal_stage,
+count(opportunity_id) as [Opportunity Count]
+from sales_pipeline
+where deal_stage in ('won','lost')
+group by deal_stage
+```
+
+Task 5. For each deal_stage, calculate the opportunity count, total close_value, and average close_value. Interpret the results carefully for open stages.
+
+```sql
+select deal_stage,
+count(opportunity_id) as [Opportunity Count],
+sum(close_value) as [Total Close Value],
+avg(close_value) as [Average Close Value]
+from sales_pipeline
+group by deal_stage
+order by [Opportunity Count] desc
+```
