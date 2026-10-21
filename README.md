@@ -279,3 +279,36 @@ group by sales_agent
 order by [Win Rate] desc
 ```
 
+Task 11. Calculate total revenue from Won opportunities only.
+
+```sql
+select sum(close_value) as [Total Won Revenue]
+from sales_pipeline
+where deal_stage='Won'
+```
+
+Task 12. Calculate the average close_value for won opportunities.
+
+```sql
+select avg(close_value) as average_close_value 
+from sales_pipeline
+where deal_stage='Won'
+```
+
+Task 13. Identify the top 10 won opportunities by close_value. Include the opportunity ID, sales agent, product, account, and close value.
+
+```sql
+select top 10 opportunity_id,
+close_value
+from sales_pipeline	
+where deal_stage='Won'
+order by close_value desc
+```
+
+Task 14. Calculate each product's won revenue and its percentage contribution to total won revenue.
+
+```sql
+
+```
+Task 15. Identify the top five products by won revenue and calculate their combined percentage of total won revenue.
+
