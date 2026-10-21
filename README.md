@@ -299,6 +299,9 @@ Task 13. Identify the top 10 won opportunities by close_value. Include the oppor
 
 ```sql
 select top 10 opportunity_id,
+sales_agent,
+product,
+account
 close_value
 from sales_pipeline	
 where deal_stage='Won'
@@ -309,12 +312,39 @@ Task 14. Calculate each product's won revenue and its percentage contribution to
 
 ```sql
 select product,
-sum(close_value) as Close_Value,
-sum(sum(close_value)) over () as Total_Value,
-cast(round(sum(close_value)*100.0/sum(sum(close_value)) over (), 2) as decimal(10,2)) as Close_Value_Contribution
+sum(close_value) as [Won Revenue],
+sum(sum(close_value)) over () as [Total Won Revenue],
+cast(round(sum(close_value)*100.0/sum(sum(close_value)) over (), 2) as decimal(10,2)) as [Revenue Contribution Percentage]
 from sales_pipeline
 where deal_stage='Won'
 group by product
 ```
+
 Task 15. Identify the top five products by won revenue and calculate their combined percentage of total won revenue.
+
+```sql
+with ProductRevenue as (
+select 
+product, 
+sum(close_value) as revenue
+from sales_pipeline
+where deal_stage = 'Won'
+group by product
+),
+TotalRevenue as (
+    select SUM(revenue) as total_rev FROM ProductRevenue
+),
+Top5Products as (
+select TOP 5 product, revenue
+from ProductRevenue
+order by  revenue desc
+)
+select
+t.product,
+t.revenue,
+CAST(ROUND(t.revenue * 100.0 / tr.total_rev, 2) AS DECIMAL(5,2)) AS [Individual Percentage],
+(select CAST(ROUND(SUM(revenue) * 100.0 / tr.total_rev, 2) AS DECIMAL(5,2)) FROM Top5Products) AS [Top 5 Combined Percentage]
+from Top5Products t
+cross join TotalRevenue tr;
+```
 
