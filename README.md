@@ -308,7 +308,13 @@ order by close_value desc
 Task 14. Calculate each product's won revenue and its percentage contribution to total won revenue.
 
 ```sql
-
+select product,
+sum(close_value) as Close_Value,
+sum(sum(close_value)) over () as Total_Value,
+cast(round(sum(close_value)*100.0/sum(sum(close_value)) over (), 2) as decimal(10,2)) as Close_Value_Contribution
+from sales_pipeline
+where deal_stage='Won'
+group by product
 ```
 Task 15. Identify the top five products by won revenue and calculate their combined percentage of total won revenue.
 
