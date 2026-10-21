@@ -224,3 +224,58 @@ from sales_pipeline
 group by deal_stage
 order by [Opportunity Count] desc
 ```
+
+Task 6. Calculate the win rate using only closed opportunities (Won and Lost) as the denominator.
+
+```sql
+select 
+cast(round(sum(case when deal_stage = 'Won' then 1 else 0 end)*100.0/count(opportunity_id), 2) as decimal(10,2)) as [Overall Win Rate]
+from sales_pipeline 
+where deal_stage IN ('Won', 'Lost')
+```
+Task 7. Calculate the loss rate using only closed opportunities as the denominator.
+
+```sql
+select 
+cast(round(sum(case when deal_stage = 'lost' then 1 else 0 end)*100.0/count(opportunity_id), 2) as decimal(10,2)) as [Overall Lost Rate]
+from sales_pipeline 
+where deal_stage IN ('Won', 'Lost')
+```
+
+Task 8. Calculate the ratio of won opportunities to lost opportunities.
+
+```sql
+select 
+cast(
+round(
+sum(case when deal_stage = 'won' then 1 else 0 end)*1.0/
+sum(case when deal_stage = 'lost' then 1 else 0 end), 2) as decimal(10,2)) as [Won-to-Lost Ratio]
+from sales_pipeline 
+where deal_stage in ('lost','won')
+```
+Task 9. Calculate the win rate for each product, using only closed opportunities for that product.
+
+```sql
+select product,
+cast(round(sum(case when deal_stage = 'Won' then 1 else 0 end)*100.0/count(opportunity_id), 2) as decimal(10,2)) as [Win Rate],
+sum(case when deal_stage = 'Won' then 1 else 0 end) as [Won Opportunity Count],
+sum(case when deal_stage = 'Lost' then 1 else 0 end) as [Lost Opportunity Count]
+from sales_pipeline 
+where deal_stage IN ('Won', 'Lost')
+group by product
+```
+
+Task 10. Calculate each sales agent's win rate and closed opportunity count. Identify the agents with the highest and lowest win rates, while considering sample size.
+
+```sql
+select sales_agent,
+cast(round(sum(case when deal_stage = 'Won' then 1 else 0 end)*100.0/count(opportunity_id), 2) as decimal(10,2)) as [Win Rate],
+count(opportunity_id) as [Closed Opportunity Count],
+sum(case when deal_stage = 'Won' then 1 else 0 end) as [Won Opportunity Count],
+sum(case when deal_stage = 'Lost' then 1 else 0 end) as [Lost Opportunity Count]
+from sales_pipeline 
+where deal_stage IN ('Won', 'Lost')
+group by sales_agent
+order by [Win Rate] desc
+```
+
