@@ -397,7 +397,7 @@ RevenueWithLag AS (
         [Year],
         [Month],
         Current_Revenue,
-        LAG(Current_Revenue, 1, 0) OVER (ORDER BY [Year], [Month]) AS Previous_Revenue
+        LAG(Current_Revenue, 1) OVER (ORDER BY [Year], [Month]) AS Previous_Revenue
     FROM MonthlyRevenue
 )
 SELECT 
@@ -406,7 +406,7 @@ SELECT
     Current_Revenue,
     Previous_Revenue,
     CASE 
-        WHEN Previous_Revenue = 0 OR Previous_Revenue IS NULL THEN NULL 
+        WHEN Previous_Revenue IS NULL THEN NULL 
         ELSE CAST(ROUND(((Current_Revenue - Previous_Revenue) * 100.0 / Previous_Revenue), 2) AS DECIMAL(10,2))
     END AS [MoM Growth %]
 FROM RevenueWithLag
