@@ -348,3 +348,90 @@ from Top5Products t
 cross join TotalRevenue tr;
 ```
 
+Task 16: Calculate the number of opportunities by year of engage_date.
+
+```sql
+select year(engage_date) as [Engage Year],
+count(opportunity_id) as [Count Opportunity]		
+from sales_pipeline
+group by year(engage_date)
+```
+
+Task 17. Calculate total won revenue by year of close_date.
+
+```sql
+select year(close_date) as [Close Year],
+sum(close_value) as [Won Revenue]	
+from sales_pipeline
+where deal_stage='Won'
+group by year(close_date)
+```
+
+Task 18. Calculate won revenue by year and month of close_date, including the year and month number so the results can be sorted chronologically.
+
+```sql
+select year(close_date) as [Close Year],
+month(close_date) as [Close Month Number],
+datename(month,close_date) as [Close Month],
+sum(close_value) as [Won Revenue]	
+from sales_pipeline
+where deal_stage='Won'
+group by year(close_date), month(close_date), datename(month,close_date)
+order by year(close_date), month(close_date), datename(month,close_date)
+```
+
+Task 19. Calculate monthly won revenue and month-over-month (MoM) percentage growth. Use LAG() and handle months with no recorded won revenue appropriately.
+
+```sql
+WITH MonthlyRevenue AS (
+    SELECT 
+        YEAR(close_date) AS [Year],
+        MONTH(close_date) AS [Month],
+        SUM(close_value) AS Current_Revenue
+    FROM sales_pipeline
+    WHERE deal_stage = 'Won' AND close_date IS NOT NULL
+    GROUP BY YEAR(close_date), MONTH(close_date)
+),
+RevenueWithLag AS (
+    SELECT 
+        [Year],
+        [Month],
+        Current_Revenue,
+        LAG(Current_Revenue, 1, 0) OVER (ORDER BY [Year], [Month]) AS Previous_Revenue
+    FROM MonthlyRevenue
+)
+SELECT 
+    [Year],
+    [Month],
+    Current_Revenue,
+    Previous_Revenue,
+    CASE 
+        WHEN Previous_Revenue = 0 OR Previous_Revenue IS NULL THEN NULL 
+        ELSE CAST(ROUND(((Current_Revenue - Previous_Revenue) * 100.0 / Previous_Revenue), 2) AS DECIMAL(10,2))
+    END AS [MoM Growth %]
+FROM RevenueWithLag
+ORDER BY [Year], [Month]
+```
+
+Task 20. Calculate the monthly win rate based on opportunities closed in each month. Use won and lost opportunities only.
+
+```sql
+WITH MonthlyPerformance AS (
+    SELECT 
+        YEAR(close_date) AS [Year],
+        MONTH(close_date) AS [Month],
+        COUNT(opportunity_id) AS [Total Closed],
+        SUM(CASE WHEN deal_stage = 'Won' THEN 1 ELSE 0 END) AS [Won Count]
+    FROM sales_pipeline
+    WHERE deal_stage IN ('Won', 'Lost') AND close_date IS NOT NULL
+    GROUP BY YEAR(close_date), MONTH(close_date)
+)
+SELECT 
+    [Year],
+    [Month],
+    [Total Closed],
+    [Won Count],
+    CAST(ROUND([Won Count] * 100.0 / [Total Closed], 2) AS DECIMAL(10,2)) AS [Monthly Win Rate %]
+FROM MonthlyPerformance
+ORDER BY [Year], [Month];
+```
