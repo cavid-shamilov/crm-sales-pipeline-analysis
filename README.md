@@ -585,7 +585,7 @@ count(opportunity_id) as [Won Deals]
 from sales_pipeline
 where deal_stage='Won'
 group by sales_agent
-order by [Total Won Revenue] desc
+order by  [Average Won Revenue] desc
 ```
 
 Task 29. Create one summary per sales agent containing total opportunities, closed opportunities, won deals, lost deals, win rate, and won revenue.
