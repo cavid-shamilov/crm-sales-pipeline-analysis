@@ -555,5 +555,69 @@ group by sp.product,sales_price
 order by Percentage_Difference desc
 ```
 
+Task 26. Calculate each sales agent's total opportunity count and rank agents by volume.
 
+```sql
+select sales_agent,
+count(opportunity_id) as [Opportunity Count] ,
+rank() over(order by count(opportunity_id) desc) as [Sales Agent Rank]
+from sales_pipeline
+group by sales_agent
+```
+
+Task 27. Calculate each agent's total won revenue and rank them from highest to lowest.
+
+```sql
+select sales_agent,
+sum(close_value) as [Total Won Revenue]
+from sales_pipeline
+group by sales_agent
+order by [Total Won Revenue] desc
+```
+
+Task 28. Calculate each agent's average won deal value and include their number of won deals.
+
+```sql
+select sales_agent,
+avg(close_value) as [Total Won Revenue],
+count(opportunity_id) as [Won Deals]
+from sales_pipeline
+where deal_stage='Won'
+group by sales_agent
+order by [Total Won Revenue] desc
+```
+
+Task 29. Create one summary per sales agent containing total opportunities, closed opportunities, won deals, lost deals, win rate, and won revenue.
+
+``` sql
+select sales_agent,
+count(opportunity_id) as [Total Opportunities],
+sum(close_value) as [Won Revenue],
+sum(case when deal_stage='Won' then 1 else 0 end) as [Won Deals],
+sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Deals],
+sum(case when deal_stage in ('lost', 'won') then 1 else 0 end) as [Closed Opportunities],
+cast(round(sum(case when deal_stage='Won' then 1 else 0 end)* 100.0/sum(case when deal_stage in ('lost', 'won') then 1 else 0 end) , 2) as decimal(10,2)) as [Win Rate]
+from sales_pipeline
+group by sales_agent
+order by [Win Rate] desc
+```
+
+Task 30. 
+
+```sql
+with Close_value as(
+select regional_office, sp.sales_agent,
+sum(close_value) as [Total Value]
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent=st.sales_agent
+group by regional_office,sp.sales_agent
+)
+
+
+select regional_office,
+sales_agent,
+rank() over(partition by regional_office order by [Total Value] desc) as [Sales Agent Rank]
+from Close_value
+```
 
