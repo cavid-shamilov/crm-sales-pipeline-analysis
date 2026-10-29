@@ -501,11 +501,10 @@ Task 22. For each product, calculate the counts of won, lost, and open opportuni
 
 ```sql
 select product,
-count(opportunity_id) as [Open Opportunities],
+sum(case when deal_stage in ('Prospecting', 'Engaging') then 1 else 0 end) as [Open Opportunities],
 sum(case when deal_stage='Won' then 1 else 0 end) as [Won Opportunity Count],
 sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Opportunity Count]
 from sales_pipeline
-where deal_stage in ('Won','lost')
 group by product
 ```
 
@@ -514,7 +513,7 @@ Task 23. Rank products by win rate, considering only closed opportunities. Inclu
 ```sql
 with Opportunity_Count as(
 select product,
-count(opportunity_id) as [Open Opportunities],
+count(opportunity_id) as [Closed Opportunity Count],
 sum(case when deal_stage='Won' then 1 else 0 end) as [Won Opportunity Count],
 sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Opportunity Count]
 from sales_pipeline
@@ -522,11 +521,12 @@ where deal_stage in ('Won','lost')
 group by product
 )
 select product,
-[Open Opportunities],
-cast(round([Won Opportunity Count]*100.0/[Open Opportunities], 2) as decimal(10,2)) as Win_Rate,
-cast(round([Lost Opportunity Count]*100.0/[Open Opportunities], 2) as decimal(10,2)) as Lost_Rate,
-rank() over ( order by [Won Opportunity Count]*100.0/[Open Opportunities] desc)
+[Closed Opportunity Count],
+cast(round([Won Opportunity Count]*100.0/[Closed Opportunity Count], 2) as decimal(10,2)) as Win_Rate,
+cast(round([Lost Opportunity Count]*100.0/[Closed Opportunity Count], 2) as decimal(10,2)) as Lost_Rate,
+rank() over ( order by [Won Opportunity Count]*100.0/[Closed Opportunity Count] desc) as Product_Rank
 from Opportunity_Count
+```
 
 Task 24. Calculate the average close_value for won opportunities for each product.
 
@@ -536,11 +536,24 @@ avg(close_value) as [ Average Close Value ]
 from sales_pipeline
 where deal_stage='Won'
 group by product
+order by [Average Close Value] desc
 ```
 
 Task 25. Compare each product's sales_price with its average won deal value. Calculate the absolute difference and percentage difference, and explain why the two figures may differ.
 
 ```sql
+select sp.product,
+sales_price,
+avg(close_value) as [ Average Close Value ],
+abs(avg(close_value) - p.sales_price) as [Absolute Difference],
+cast(round((avg(close_value)-sales_price) * 100.0/NULLIF(p.sales_price, 0), 2) as decimal(10,2)) as Percentage_Difference
+from sales_pipeline as sp
+inner join products as p
+on sp.product=p.product
+where deal_stage='Won'
+group by sp.product,sales_price
+order by Percentage_Difference desc
+```
 
 
 
