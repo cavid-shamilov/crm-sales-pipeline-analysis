@@ -571,6 +571,7 @@ Task 27. Calculate each agent's total won revenue and rank them from highest to 
 select sales_agent,
 sum(close_value) as [Total Won Revenue]
 from sales_pipeline
+where deal_stage='Won'
 group by sales_agent
 order by [Total Won Revenue] desc
 ```
@@ -579,7 +580,7 @@ Task 28. Calculate each agent's average won deal value and include their number 
 
 ```sql
 select sales_agent,
-avg(close_value) as [Total Won Revenue],
+avg(close_value) as [Average Won Revenue],
 count(opportunity_id) as [Won Deals]
 from sales_pipeline
 where deal_stage='Won'
@@ -592,11 +593,11 @@ Task 29. Create one summary per sales agent containing total opportunities, clos
 ``` sql
 select sales_agent,
 count(opportunity_id) as [Total Opportunities],
-sum(close_value) as [Won Revenue],
+sum(case when deal_stage='won' then close_value else 0 end) as [Won Revenue],
 sum(case when deal_stage='Won' then 1 else 0 end) as [Won Deals],
 sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Deals],
 sum(case when deal_stage in ('lost', 'won') then 1 else 0 end) as [Closed Opportunities],
-cast(round(sum(case when deal_stage='Won' then 1 else 0 end)* 100.0/sum(case when deal_stage in ('lost', 'won') then 1 else 0 end) , 2) as decimal(10,2)) as [Win Rate]
+cast(round(sum(case when deal_stage='Won' then 1.0 else 0 end)* 100.0/nullif(sum(case when deal_stage in ('lost', 'won') then 1 else 0 end), 0) , 2) as decimal(10,2)) as [Win Rate]
 from sales_pipeline
 group by sales_agent
 order by [Win Rate] desc
@@ -605,19 +606,34 @@ order by [Win Rate] desc
 Task 30. 
 
 ```sql
-with Close_value as(
-select regional_office, sp.sales_agent,
-sum(close_value) as [Total Value]
+with AgentRevenue as (
+select
+st.regional_office,
+sp.sales_agent,
+SUM(sp.close_value) as [Total Won Revenue]
 from sales_pipeline as sp
 inner join sales_teams as st
-on sp.sales_agent=st.sales_agent
-group by regional_office,sp.sales_agent
-)
-
-
-select regional_office,
+on sp.sales_agent = st.sales_agent
+where sp.deal_stage = 'Won'
+group by st.regional_office,
+sp.sales_agent
+),
+RankedAgents as (
+select
+regional_office,
 sales_agent,
-rank() over(partition by regional_office order by [Total Value] desc) as [Sales Agent Rank]
-from Close_value
+[Total Won Revenue],
+rank() over (partition by regional_office order by [Total Won Revenue] desc) as [Sales Agent Rank]
+from AgentRevenue
+)
+select
+regional_office,
+sales_agent,
+[Total Won Revenue],
+[Sales Agent Rank]
+from RankedAgents
+where [Sales Agent Rank] <= 3
+order by regional_office,
+[Sales Agent Rank]
 ```
 
