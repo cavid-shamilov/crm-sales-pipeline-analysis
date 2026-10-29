@@ -383,34 +383,86 @@ order by year(close_date), month(close_date), datename(month,close_date)
 Task 19. Calculate monthly won revenue and month-over-month (MoM) percentage growth. Use LAG() and handle months with no recorded won revenue appropriately.
 
 ```sql
-WITH MonthlyRevenue AS (
-    SELECT 
-        YEAR(close_date) AS [Year],
-        MONTH(close_date) AS [Month],
+WITH MonthBounds AS (
+    SELECT
+        DATEFROMPARTS(
+            YEAR(MIN(close_date)),
+            MONTH(MIN(close_date)),
+            1
+        ) AS StartMonth,
+        DATEFROMPARTS(
+            YEAR(MAX(close_date)),
+            MONTH(MAX(close_date)),
+            1
+        ) AS EndMonth
+    FROM dbo.sales_pipeline
+    WHERE deal_stage = 'Won'
+      AND close_date IS NOT NULL
+),
+MonthCalendar AS (
+    SELECT StartMonth AS MonthStart
+    FROM MonthBounds
+    WHERE StartMonth IS NOT NULL
+
+    UNION ALL
+
+    SELECT DATEADD(MONTH, 1, mc.MonthStart)
+    FROM MonthCalendar mc
+    CROSS JOIN MonthBounds mb
+    WHERE mc.MonthStart < mb.EndMonth
+),
+MonthlyRevenue AS (
+    SELECT
+        DATEFROMPARTS(
+            YEAR(close_date),
+            MONTH(close_date),
+            1
+        ) AS MonthStart,
         SUM(close_value) AS Current_Revenue
-    FROM sales_pipeline
-    WHERE deal_stage = 'Won' AND close_date IS NOT NULL
-    GROUP BY YEAR(close_date), MONTH(close_date)
+    FROM dbo.sales_pipeline
+    WHERE deal_stage = 'Won'
+      AND close_date IS NOT NULL
+    GROUP BY
+        YEAR(close_date),
+        MONTH(close_date)
+),
+RevenueFilled AS (
+    SELECT
+        mc.MonthStart,
+        COALESCE(mr.Current_Revenue, 0) AS Current_Revenue
+    FROM MonthCalendar mc
+    LEFT JOIN MonthlyRevenue mr
+        ON mc.MonthStart = mr.MonthStart
 ),
 RevenueWithLag AS (
-    SELECT 
-        [Year],
-        [Month],
+    SELECT
+        MonthStart,
         Current_Revenue,
-        LAG(Current_Revenue, 1) OVER (ORDER BY [Year], [Month]) AS Previous_Revenue
-    FROM MonthlyRevenue
+        LAG(Current_Revenue) OVER (
+            ORDER BY MonthStart
+        ) AS Previous_Revenue
+    FROM RevenueFilled
 )
-SELECT 
-    [Year],
-    [Month],
+SELECT
+    YEAR(MonthStart) AS [Year],
+    MONTH(MonthStart) AS [Month],
     Current_Revenue,
     Previous_Revenue,
-    CASE 
-        WHEN Previous_Revenue IS NULL THEN NULL 
-        ELSE CAST(ROUND(((Current_Revenue - Previous_Revenue) * 100.0 / Previous_Revenue), 2) AS DECIMAL(10,2))
+    CASE
+        WHEN Previous_Revenue IS NULL
+          OR Previous_Revenue = 0
+        THEN NULL
+        ELSE CAST(
+            ROUND(
+                (Current_Revenue - Previous_Revenue)
+                * 100.0 / Previous_Revenue,
+                2
+            ) AS DECIMAL(10,2)
+        )
     END AS [MoM Growth %]
 FROM RevenueWithLag
-ORDER BY [Year], [Month]
+ORDER BY MonthStart
+OPTION (MAXRECURSION 0);
 ```
 
 Task 20. Calculate the monthly win rate based on opportunities closed in each month. Use won and lost opportunities only.
@@ -435,3 +487,60 @@ SELECT
 FROM MonthlyPerformance
 ORDER BY [Year], [Month];
 ```
+
+Task 21. Calculate the total number of opportunities for each product.
+
+```sql
+select product,
+count(opportunity_id) as [Opportunity Count]
+from sales_pipeline
+group by product
+```
+
+Task 22. For each product, calculate the counts of won, lost, and open opportunities.
+
+```sql
+select product,
+count(opportunity_id) as [Open Opportunities],
+sum(case when deal_stage='Won' then 1 else 0 end) as [Won Opportunity Count],
+sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Opportunity Count]
+from sales_pipeline
+where deal_stage in ('Won','lost')
+group by product
+```
+
+Task 23. Rank products by win rate, considering only closed opportunities. Include each product's closed opportunity count.
+
+```sql
+with Opportunity_Count as(
+select product,
+count(opportunity_id) as [Open Opportunities],
+sum(case when deal_stage='Won' then 1 else 0 end) as [Won Opportunity Count],
+sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Opportunity Count]
+from sales_pipeline
+where deal_stage in ('Won','lost')
+group by product
+)
+select product,
+[Open Opportunities],
+cast(round([Won Opportunity Count]*100.0/[Open Opportunities], 2) as decimal(10,2)) as Win_Rate,
+cast(round([Lost Opportunity Count]*100.0/[Open Opportunities], 2) as decimal(10,2)) as Lost_Rate,
+rank() over ( order by [Won Opportunity Count]*100.0/[Open Opportunities] desc)
+from Opportunity_Count
+
+Task 24. Calculate the average close_value for won opportunities for each product.
+
+```sql
+select product,
+avg(close_value) as [ Average Close Value ]
+from sales_pipeline
+where deal_stage='Won'
+group by product
+```
+
+Task 25. Compare each product's sales_price with its average won deal value. Calculate the absolute difference and percentage difference, and explain why the two figures may differ.
+
+```sql
+
+
+
