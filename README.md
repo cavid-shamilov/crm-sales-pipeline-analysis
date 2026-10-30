@@ -665,7 +665,7 @@ group by st.regional_office
 select
 regional_office,
 [Total Won Revenue],
-rank() over ( order by [Total Won Revenue] desc) as [Sales Agent Rank]
+rank() over ( order by [Total Won Revenue] desc) as [Regional Office Rank]
 from OfficeRevenue
 ```
 
@@ -685,5 +685,100 @@ order by [Win Rate] desc
 Task 34. Calculate opportunity count, won deals, win rate, and won revenue for each manager
 
 ```sql
-
+select manager,
+count(opportunity_id) as [Total Opportunities],
+sum(case when deal_stage='Won' then 1 else 0 end) as [Won Deals],
+cast(round(sum(case when deal_stage='Won' then 1.0 else 0 end)* 100.0/nullif(sum(case when deal_stage in ('lost', 'won') then 1 else 0 end), 0) , 2) as decimal(10,2)) as [Win Rate],
+sum(case when deal_stage='won' then close_value else 0 end) as [Won Revenue]
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent=st.sales_agent
+group by manager
+order by [Win Rate] desc
 ```
+
+Task 35. Compare regional offices using total opportunities, closed opportunities, win rate, won revenue, and average won deal value. Identify the strongest-performing office and support your conclusion with metrics.
+
+```sql
+ select regional_office,
+count(opportunity_id) as [Total Opportunities],
+sum(case when deal_stage in ('lost', 'won') then 1 else 0 end) as [Closed Opportunities],
+cast(round(sum(case when deal_stage='Won' then 1.0 else 0 end)* 100.0/nullif(sum(case when deal_stage in ('lost', 'won') then 1 else 0 end), 0) , 2) as decimal(10,2)) as [Win Rate],
+sum(case when deal_stage='won' then close_value else 0 end) as [Won Revenue],
+avg(case when sp.deal_stage = 'Won' then cast(sp.close_value as decimal(10,2)) end) as [Average Won Deal Value]
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent=st.sales_agent
+group by regional_office
+order by [Win Rate] desc
+```
+
+Task 36. Calculate the number of opportunities associated with each account. Exclude NULL accounts from the account-level grouping.
+
+```sql
+select account,
+count(opportunity_id) as [Opportunity Count]
+from sales_pipeline
+where account is not null
+group by account
+```
+
+Task 37. Calculate won revenue by account and identify the top 10 accounts.
+
+```sql
+select top 10 account,
+sum(case when deal_stage='won' then close_value else 0 end) as [Won Revenue]
+from sales_pipeline
+where account is not null
+group by account
+order by [Won Revenue] desc
+```
+
+Task 38. Join sales_pipeline with accounts and calculate opportunity count, won revenue, and win rate by sector.
+
+```sql
+select sector,
+count(opportunity_id) as [Total Opportunities],
+sum(case when deal_stage='won' then close_value else 0 end) as [Won Revenue],
+cast(round(sum(case when deal_stage='Won' then 1.0 else 0 end)* 100.0/nullif(sum(case when deal_stage in ('lost', 'won') then 1 else 0 end), 0) , 2) as decimal(10,2)) as [Win Rate]
+from sales_pipeline as sp
+inner join accounts as a
+on a.account=sp.account
+group by sector
+order by [Win Rate] desc
+```
+
+Task 39. Compare each account's annual revenue with its recorded won deal revenue. Explain why these figures should not be treated as equivalent measures.
+
+```sql
+SELECT 
+    a.account AS [Account Name],
+    a.revenue AS [Account Annual Revenue],
+    ISNULL(SUM(CASE WHEN s.deal_stage = 'Won' THEN s.close_value END), 0) AS [Total Won Deal Revenue] 
+FROM accounts a
+LEFT JOIN sales_pipeline s ON a.account = s.account
+GROUP BY a.account, a.revenue
+ORDER BY [Account Annual Revenue] DESC;
+```
+
+Task 40. Analyze opportunities and won revenue for accounts with a populated subsidiary_of field versus accounts without one. State the assumption you make about blank parent-company values.
+
+```sql
+SELECT 
+    CASE 
+        WHEN a.subsidiary_of IS NULL OR LTRIM(RTRIM(a.subsidiary_of)) = '' THEN 'Independent / Standalone'
+        ELSE 'Subsidiary'
+    END AS [Account Type],
+    COUNT(s.opportunity_id) AS [Total Opportunities],
+    SUM(CASE WHEN s.deal_stage = 'Won' THEN 1 ELSE 0 END) AS [Won Opportunities Count],
+    ISNULL(SUM(CASE WHEN s.deal_stage = 'Won' THEN s.close_value END), 0) AS [Total Won Revenue],
+    CAST(ROUND(ISNULL(AVG(CASE WHEN s.deal_stage = 'Won' THEN CAST(s.close_value AS FLOAT) END), 0), 2) AS DECIMAL(10,2)) AS [Avg Won Deal Value]
+FROM accounts a
+LEFT JOIN sales_pipeline s ON a.account = s.account
+GROUP BY 
+    CASE 
+        WHEN a.subsidiary_of IS NULL OR LTRIM(RTRIM(a.subsidiary_of)) = '' THEN 'Independent / Standalone'
+        ELSE 'Subsidiary'
+    END
+```
+
