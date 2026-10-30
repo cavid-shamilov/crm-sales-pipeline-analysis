@@ -603,7 +603,7 @@ group by sales_agent
 order by [Win Rate] desc
 ```
 
-Task 30. 
+Task 30. Use a window function to identify the top three sales agents in each regional_office by won revenue.
 
 ```sql
 with AgentRevenue as (
@@ -637,3 +637,53 @@ order by regional_office,
 [Sales Agent Rank]
 ```
 
+Task 31. Calculate total opportunities by regional_office
+
+```sql
+select regional_office,
+count (opportunity_id) as [Total Opportunities]
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent=st.sales_agent
+group by regional_office
+```
+
+Task 32. Calculate total won revenue by regional office and rank the offices.
+
+```sql
+with OfficeRevenue as (
+select
+st.regional_office,
+sum(sp.close_value) as [Total Won Revenue]
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent = st.sales_agent
+where sp.deal_stage = 'Won'
+group by st.regional_office
+)
+
+select
+regional_office,
+[Total Won Revenue],
+rank() over ( order by [Total Won Revenue] desc) as [Sales Agent Rank]
+from OfficeRevenue
+```
+
+Task 33. Calculate each regional office's win rate using closed opportunities only.
+
+```sql
+select regional_office ,
+cast(round(sum(case when deal_stage = 'Won' then 1 else 0 end)*100.0/count(opportunity_id), 2) as decimal(10,2)) as [Win Rate] 
+from sales_pipeline as sp
+inner join sales_teams as st
+on sp.sales_agent=st.sales_agent
+where deal_stage IN ('Won', 'Lost')
+group by regional_office
+order by [Win Rate] desc
+```
+
+Task 34. Calculate opportunity count, won deals, win rate, and won revenue for each manager
+
+```sql
+
+```
