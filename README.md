@@ -785,12 +785,6 @@ GROUP BY
 Task 41. Calculate the average number of days between engage_date and close_date for won opportunities.
 
 ```sql
-
-```
-
-Task 41. Calculate the average number of days between engage_date and close_date for won opportunities.
-
-```sql
 select
 avg(DATEDIFF(dd,engage_date,close_date)*1.0) as [Average Number Of Days],
 count(opportunity_id) as [Won Deals Count]
