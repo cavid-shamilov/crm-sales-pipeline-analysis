@@ -301,7 +301,7 @@ Task 13. Identify the top 10 won opportunities by close_value. Include the oppor
 select top 10 opportunity_id,
 sales_agent,
 product,
-account
+account,
 close_value
 from sales_pipeline	
 where deal_stage='Won'
@@ -517,7 +517,7 @@ count(opportunity_id) as [Closed Opportunity Count],
 sum(case when deal_stage='Won' then 1 else 0 end) as [Won Opportunity Count],
 sum(case when deal_stage='Lost' then 1 else 0 end) as [Lost Opportunity Count]
 from sales_pipeline
-where deal_stage in ('Won','lost')
+where deal_stage in ('Won','Lost')
 group by product
 )
 select product,
@@ -568,12 +568,16 @@ group by sales_agent
 Task 27. Calculate each agent's total won revenue and rank them from highest to lowest.
 
 ```sql
-select sales_agent,
-sum(close_value) as [Total Won Revenue]
-from sales_pipeline
-where deal_stage='Won'
-group by sales_agent
-order by [Total Won Revenue] desc
+SELECT
+    sales_agent,
+    SUM(close_value) AS [Total Won Revenue],
+    RANK() OVER (
+        ORDER BY SUM(close_value) DESC
+    ) AS [Revenue Rank]
+FROM sales_pipeline
+WHERE deal_stage = 'Won'
+GROUP BY sales_agent
+ORDER BY [Revenue Rank]
 ```
 
 Task 28. Calculate each agent's average won deal value and include their number of won deals.
@@ -753,12 +757,12 @@ Task 39. Compare each account's annual revenue with its recorded won deal revenu
 ```sql
 SELECT 
     a.account AS [Account Name],
-    a.revenue AS [Account Annual Revenue],
-    ISNULL(SUM(CASE WHEN s.deal_stage = 'Won' THEN s.close_value END), 0) AS [Total Won Deal Revenue] 
+    a.revenue AS [Account Annual Revenue (USD Millions)],
+    ISNULL(SUM(CASE WHEN s.deal_stage = 'Won' THEN s.close_value END), 0) AS [Total Won Deal Revenue (USD)] 
 FROM accounts a
 LEFT JOIN sales_pipeline s ON a.account = s.account
 GROUP BY a.account, a.revenue
-ORDER BY [Account Annual Revenue] DESC;
+ORDER BY [Account Annual Revenue (USD Millions)] DESC;
 ```
 
 Task 40. Analyze opportunities and won revenue for accounts with a populated subsidiary_of field versus accounts without one. State the assumption you make about blank parent-company values.
@@ -910,7 +914,7 @@ RankedProducts AS (
     SELECT 
         pr.product,
         pr.Product_Revenue,
-        DENSE_RANK() OVER (ORDER BY pr.Product_Revenue DESC) AS [Product Rank],
+        DENSE_RANK() OVER (ORDER BY pr.Product_Revenue DESC product) AS [Product Rank],
         SUM(pr.Product_Revenue) OVER (ORDER BY pr.Product_Revenue DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS Cumulative_Revenue,
         CAST(ROUND(
             SUM(pr.Product_Revenue) OVER (ORDER BY pr.Product_Revenue DESC) * 100.0 / tr.Grand_Total, 
@@ -1222,7 +1226,7 @@ Customer-level analysis identified the accounts contributing the most won revenu
 
 **Recommendations:**
 
-- Prioritize account-management efforts for high-revenue customers and investigate opportunities to expand successful relationships.
+- Prioritize account-management efforts for customers generating the highest won revenue and investigate opportunities to expand successful relationships.
 - Examine the reasons behind the stronger conversion rate in Marketing and the lower conversion rate in Finance.
 - Develop sector-specific sales strategies based on customer needs and observed performance.
 - Improve account data completeness to support more comprehensive customer and industry analysis.
@@ -1287,7 +1291,7 @@ Based on the combined findings, the following actions are recommended:
 
 3. **Strengthen Regional Performance:** Study West's revenue and conversion performance, East's average deal value and sales cycle, and opportunities to improve Central's conversion efficiency.
 
-4. **Develop Customer-Specific Strategies:** Prioritize high-value accounts and investigate sector-level differences, especially the strong revenue contribution of Retail and the relatively lower win rate in Finance.
+4. **Develop Customer-Specific Strategies:** Prioritize accounts generating the highest won revenue and investigate sector-level differences, especially the strong revenue contribution of Retail and the relatively lower win rate in Finance.
 
 5. **Monitor Sales Cycle Efficiency:** Track sales cycle duration together with win rate and average deal value rather than treating shorter sales cycles as an independent measure of success.
 
