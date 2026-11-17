@@ -1340,6 +1340,10 @@ The findings provide a data-driven foundation for improving product focus, sales
 
 ![customer_industry](customer_industry.png)
 
+### Power BI File
 
+The complete Power BI report is available in the repository:
+
+**[Download Power BI Report](project_2.pbix)**
 
 
