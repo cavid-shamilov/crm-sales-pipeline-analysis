@@ -1334,11 +1334,11 @@ The findings provide a data-driven foundation for improving product focus, sales
 
 ### Regional & Manager Performance
 
-![Regional & Manager Performance](overall.png)
+![rmperformance](overall.png)
 
 ### Customer & Industry Analysis
 
-![Customer & Industry Analysis](overall.png)
+![customer_industry](overall.png)
 
 
 
