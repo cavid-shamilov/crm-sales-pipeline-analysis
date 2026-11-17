@@ -1315,3 +1315,31 @@ The findings should be interpreted in the context of the available dataset:
 The analysis shows that the company generated $10.0 million in won revenue with an overall closed-deal win rate of 63.15%. Revenue is concentrated in three major products, while meaningful performance differences exist across sales representatives, regional offices, managers, and customer sectors.
 
 The findings provide a data-driven foundation for improving product focus, sales conversion, account management, and performance monitoring. By combining multiple KPIs rather than relying on individual metrics, the business can make more balanced and informed sales decisions.
+
+---
+
+## Power BI Analysis
+
+### Executive Overview
+
+![Executive Overview](executive.png)
+
+### Product Performance
+
+![Product Performance](product_2.png)
+
+### Sales Team Performance
+
+![Sales Team Performance](stperformance.png)
+
+### Regional & Manager Performance
+
+![Regional & Manager Performance](overall.png)
+
+### Customer & Industry Analysis
+
+![Customer & Industry Analysis](overall.png)
+
+
+
+
