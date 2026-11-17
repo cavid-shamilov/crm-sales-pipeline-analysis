@@ -1349,4 +1349,4 @@ The complete Power BI report is available in the repository:
 
 ### Dataset source:
 
-[CRM(Customer_Relationship_Management)_Opportunitiest](https://www.kaggle.com/datasets/innocentmfa/crm-sales-opportunities?utm_source=chatgpt.com).
+[CRM(Customer_Relationship_Management)_Opportunities](https://www.kaggle.com/datasets/innocentmfa/crm-sales-opportunities?utm_source=chatgpt.com).
